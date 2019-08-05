@@ -17,9 +17,10 @@
  *
  */
 
-#define _XOPEN_SOURCE 700
+#define _POSIX_C_SOURCE 2
 #include <errno.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -33,7 +34,7 @@ FILE *fileopen(const char *path)
 
 	FILE *f = fopen(path, "rb");
 	if (f == NULL) {
-		fprintf(stderr, "cmp: Couldn't open %s: %s\n", path, strerror(errno));
+		fprintf(stderr, "cmp: %s: %s\n", path, strerror(errno));
 		exit(1);
 	}
 
@@ -42,7 +43,7 @@ FILE *fileopen(const char *path)
 
 int main(int argc, char *argv[])
 {
-	int c = 0;
+	int c;
 	enum { FIRSTONLY, ALL, SILENT } output = FIRSTONLY;
 
 	while ((c = getopt(argc, argv, "ls")) != EOF) {
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (optind != argc - 2) {
-		fprintf(stderr, "cmp: Two files are required\n");
+		fprintf(stderr, "cmp: missing operand\n");
 		return 1;
 	}
 
@@ -86,14 +87,21 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	for (int byte = 1, line = 1; !(feof(f1) || feof(f2)); byte++) {
+	intmax_t byte = 0;
+	intmax_t line = 1;
+	while (++byte) {
 		int c1 = fgetc(f1);
 		int c2 = fgetc(f2);
 
 		if (c1 == c2) {
+			if (c1 == EOF) {
+				return 0;
+			}
+
 			if (c1 == '\n') {
 				line++;
 			}
+
 			continue;
 		}
 
@@ -102,10 +110,11 @@ int main(int argc, char *argv[])
 		} else if (c2 == EOF && output != SILENT) {
 			fprintf(stderr, "cmp: EOF on %s\n", file2);
 		} else if (output == ALL) {
-			printf("%d %o %o\n", byte, c1, c2);
+			printf("%zd %o %o\n", byte, c1, c2);
 			continue;
 		} else if (output != SILENT) {
-			printf("%s %s differ: char %d, line %d\n", file1, file2, byte, line);
+			printf("%s %s differ: char %zd, line %zd\n",
+				file1, file2, byte, line);
 		}
 		return 1;
 	}
