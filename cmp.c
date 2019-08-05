@@ -24,6 +24,7 @@
 
 #define _POSIX_C_SOURCE 2
 #include <errno.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -48,6 +49,8 @@ FILE *fileopen(const char *path)
 
 int main(int argc, char *argv[])
 {
+	setlocale(LC_ALL, "");
+
 	int c;
 	enum { FIRSTONLY, ALL, SILENT } output = FIRSTONLY;
 
