@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 		} else if (c2 == EOF && output != SILENT) {
 			fprintf(stderr, "cmp: EOF on %s\n", file2);
 		} else if (output == ALL) {
-			printf("%zd %o %o\n", byte, c1, c2);
+			printf("%zd %hho %hho\n", byte, c1, c2);
 			continue;
 		} else if (output != SILENT) {
 			printf("%s %s differ: char %zd, line %zd\n",
